@@ -72,7 +72,7 @@ fig.update_layout(
     yaxis_title = "Price (USD)"
 )
 
-fig.show()
+#fig.show()
 
 fig = go.Figure()
 
@@ -91,4 +91,33 @@ fig.update_layout(
     yaxis_title = "Cumulative Returns (%)"
 )
 
-fig.show()
+#fig.show()
+
+print("\nMissing values:")
+print(data.isnull().sum())
+
+print("\nDuplicate rows:")
+print(data.duplicated().sum())
+
+print("\nFirst date in dataset:")
+print(data.index.min())
+
+print("\nLast date in dataset:")
+print(data.index.max())
+
+print("\nIs data sorted?:")
+print(data.index.is_monotonic_increasing)
+
+if(data.index.is_monotonic_increasing == False):
+    data = data.sort_index()
+    print("\nIs data sorted?:")
+    print(data.index.is_monotonic_increasing)
+
+#Validating values
+print(
+    "Invalid High values:", (data["High"]<data["Low"]).sum()
+)
+
+print(
+    "Invalid Close values:", ((data["Close"]>data["High"])|(data["Close"]<data["Low"])).sum()
+)

@@ -1,32 +1,65 @@
-import yfinance as yf
 import pandas as pd
+import yfinance as yf
 from pathlib import Path
 
+
 def download_data(symbol, start, end):
+
     data = yf.download(
         symbol,
-        start = start,
-        end = end,
-        auto_adjust = True
+        start=start,
+        end=end,
+        auto_adjust=True
     )
 
+    # Flatten yfinance MultiIndex columns
     if isinstance(data.columns, pd.MultiIndex):
         data.columns = data.columns.get_level_values(0)
 
+    # Keep only required columns
+    data = data[
+        [
+            "Open",
+            "High",
+            "Low",
+            "Close",
+            "Volume"
+        ]
+    ]
+
+    # Make sure dates are sorted
+    data = data.sort_index()
+
     return data
+
 
 if __name__ == "__main__":
 
-    symbol = "MSFT"
+    symbols = [
+        "AAPL",
+        "MSFT",
+        "GOOGL"
+    ]
 
-    data = download_data(
-        symbol,
-        "2020-01-01",
-        "2025-01-01"
-    )
+    start = "2020-01-01"
+    end = "2025-01-01"
 
-    output_path = Path(f"data/raw/{symbol}.csv")
-    data.to_csv(output_path)
+    for symbol in symbols:
 
-    print(f"Saved data to {output_path}")
-    print(f"Rows: {len(data)}")
+        print(f"\nDownloading {symbol}...")
+
+        data = download_data(
+            symbol,
+            start,
+            end
+        )
+
+        output_path = Path(
+            f"data/raw/{symbol}.csv"
+        )
+
+        data.to_csv(output_path)
+
+        print(f"Saved: {output_path}")
+        print(f"Rows: {len(data)}")
+        print(f"Columns: {data.columns.tolist()}")
