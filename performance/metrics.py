@@ -106,11 +106,19 @@ def calculate_trade_statistics(trades):
         "profit_factor": profit_factor
     }
 
+def drawdown_series(portfolio):
+
+    peak = portfolio.cummax()
+
+    drawdown = (
+        portfolio - peak
+    ) / peak
+
+    return drawdown
+
 def maximum_drawdown(portfolio):
 
-    running_max = portfolio.cummax()
-
-    drawdown = (portfolio - running_max) / running_max
+    drawdown = drawdown_series(portfolio)
 
     return drawdown.min() * 100
 

@@ -22,7 +22,8 @@ from performance.metrics import (
     cagr,
     sharpe_ratio,
     calculate_trade_statistics,
-    maximum_drawdown
+    maximum_drawdown,
+    drawdown_series
 )
 
 data = load_data("AAPL")
@@ -123,16 +124,51 @@ sharpe = sharpe_ratio(
 )
 
 buy_hold_start = data["Open"].iloc[1]
-buy_hold_end = data["Close"].iloc[-1]
 
-buy_hold_shares = int(initial_capital // buy_hold_start)
+buy_hold_shares = int(
+    initial_capital // buy_hold_start
+)
 
-buy_hold_cash = (initial_capital - buy_hold_shares*buy_hold_start)
+buy_hold_cash = (
+    initial_capital
+    - buy_hold_shares * buy_hold_start
+)
 
-buy_hold_final = (buy_hold_cash + buy_hold_shares*buy_hold_end)
+buy_hold_values = []
 
-buy_hold_return = total_return(initial_capital,buy_hold_final)
+for i in range(1, len(data)):
 
+    date = data.index[i]
+
+    close_price = data["Close"].iloc[i]
+
+    value = (
+        buy_hold_cash
+        + buy_hold_shares * close_price
+    )
+
+    buy_hold_values.append({
+        "Date": date,
+        "Portfolio": value
+    })
+
+buy_hold = pd.DataFrame(
+    buy_hold_values
+)
+
+buy_hold.set_index(
+    "Date",
+    inplace=True
+)
+
+print("\nStrategy vs Buy & Hold")
+
+comparison = pd.DataFrame({
+    "Strategy": portfolio["Portfolio"],
+    "Buy & Hold": buy_hold["Portfolio"]
+})
+
+print(comparison.tail(20))
 
 print("\n")
 print("=" * 50)
@@ -191,14 +227,6 @@ print(
     f"Sharpe Ratio:        {sharpe:.2f}"
 )
 
-print(
-    f"Buy & Hold Final:    ${buy_hold_final:,.2f}"
-)
-
-print(
-    f"Buy & Hold Return:   {buy_hold_return:.2f}%"
-)
-
 print("=" * 50)
 
 fig = go.Figure()
@@ -216,6 +244,113 @@ fig.update_layout(
     title = "Strategy Equity Curve",
     xaxis_title = "Date",
     yaxis_title = "Portfolio Value ($)"
+)
+
+fig.show()
+
+fig = go.Figure()
+
+fig.add_trace(
+    go.Scatter(
+        x=portfolio.index,
+        y=portfolio["Portfolio"],
+        mode="lines",
+        name="Strategy"
+    )
+)
+
+fig.add_trace(
+    go.Scatter(
+        x=buy_hold.index,
+        y=buy_hold["Portfolio"],
+        mode="lines",
+        name="Buy & Hold"
+    )
+)
+
+fig.update_layout(
+    title="Strategy vs Buy & Hold",
+    xaxis_title="Date",
+    yaxis_title="Portfolio Value ($)"
+)
+
+fig.show()
+
+drawdown = drawdown_series(
+    portfolio["Portfolio"]
+)
+
+print("\nDrawdown:")
+print(drawdown.tail(20))
+
+fig = go.Figure()
+
+fig.add_trace(
+    go.Scatter(
+        x=drawdown.index,
+        y=drawdown * 100,
+        mode="lines",
+        name="Drawdown"
+    )
+)
+
+fig.update_layout(
+    title="Strategy Drawdown",
+    xaxis_title="Date",
+    yaxis_title="Drawdown (%)"
+)
+
+fig.show()
+
+fig = go.Figure()
+
+fig.add_trace(
+    go.Scatter(
+        x=data.index,
+        y=data["Close"],
+        mode="lines",
+        name="AAPL"
+    )
+)
+
+buy_signals = data[
+    data["Signal"] == 1
+]
+
+sell_signals = data[
+    data["Signal"] == -1
+]
+
+fig.add_trace(
+    go.Scatter(
+        x=buy_signals.index,
+        y=buy_signals["Close"],
+        mode="markers",
+        name="BUY",
+        marker=dict(
+            symbol="triangle-up",
+            size=10
+        )
+    )
+)
+
+fig.add_trace(
+    go.Scatter(
+        x=sell_signals.index,
+        y=sell_signals["Close"],
+        mode="markers",
+        name="SELL",
+        marker=dict(
+            symbol="triangle-down",
+            size=10
+        )
+    )
+)
+
+fig.update_layout(
+    title="AAPL Trading Signals",
+    xaxis_title="Date",
+    yaxis_title="Price ($)"
 )
 
 fig.show()
