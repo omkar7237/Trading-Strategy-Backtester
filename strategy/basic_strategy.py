@@ -15,8 +15,8 @@ def generate_signals(data):
     )
 
     sell_condition = (
-        (data["SMA_20"]<data["SMA_50"]) &
-        (data["RSI_14"] < 50) &
+        (data["SMA_20"] < data["SMA_50"])
+        |
         (data["MACD"] < data["MACD_Signal"])
     )
 
