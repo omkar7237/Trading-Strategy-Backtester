@@ -6,7 +6,8 @@ def test_buy_and_sell():
     engine = BacktestEngine(
         initial_capital=10000,
         commission=0.001,
-        slippage=0
+        slippage=0,
+        position_size = 0.5
     )
 
     engine.buy(
@@ -14,7 +15,7 @@ def test_buy_and_sell():
         100
     )
 
-    assert engine.position == 100
+    assert engine.position == 49
 
     engine.sell(
         "2024-01-02",
@@ -22,5 +23,4 @@ def test_buy_and_sell():
     )
 
     assert engine.position == 0
-
-    assert engine.cash == 11000
+    assert engine.cash == 10479.71

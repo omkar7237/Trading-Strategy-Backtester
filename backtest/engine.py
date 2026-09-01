@@ -7,7 +7,10 @@ class BacktestEngine:
         self,
         initial_capital=10000,
         commission=0.001,
-        slippage=0.001
+        slippage=0.001,
+        position_size = 1.0,
+        stop_loss = None,
+        take_profit = None
     ):
 
         self.initial_capital = initial_capital
@@ -24,6 +27,12 @@ class BacktestEngine:
 
         self.slippage = slippage
 
+        self.position_size = position_size
+
+        self.stop_loss = stop_loss
+
+        self.take_profit = take_profit
+
     def buy(self, date, price):
 
         if self.position > 0:
@@ -32,8 +41,19 @@ class BacktestEngine:
         # Slippage makes buying more expensive
         execution_price = price * (1 + self.slippage)
 
+        self.stop_price = None
+        self.target_price = None
+
+        if self.stop_loss is not None:
+            self.stop_price = price * (1 - self.stop_loss)
+
+        if self.take_profit is not None:
+            self.target_price = price * (1 + self.take_profit)
+
+        capital_to_use = self.cash * self.position_size
+
         shares = int(
-            self.cash // (
+            capital_to_use // (
                 execution_price * (1 + self.commission)
             )
         )
@@ -106,6 +126,27 @@ class BacktestEngine:
 
     def get_trades(self):
         return pd.DataFrame(self.trades)
+
+    def check_risk_exit(self, date, price):
+
+        if self.position <= 0:
+            return False
+
+        if (
+            self.stop_price is not None
+            and price <= self.stop_price
+        ):
+            self.sell(date, price)
+            return True
+
+        if (
+            self.target_price is not None
+            and price >= self.target_price
+        ):
+            self.sell(date, price)
+            return True
+
+        return False
 
             
                 
