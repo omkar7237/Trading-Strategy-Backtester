@@ -10,7 +10,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from data.loader import load_data, load_enriched_data
 from data.indicator import sma, ema, rsi, macd, bollinger_bands
-from strategy.basic_strategy import generate_signals
+from strategy.basic_strategy import MACrossoverStrategy, RSIStrategy, MACDStrategy, CombinedStrategy
 from backtest.engine import BacktestEngine
 from ai.reasoning_engine import generate_backtest_analysis as ai_generate_analysis
 
