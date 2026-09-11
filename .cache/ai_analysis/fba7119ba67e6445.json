@@ -1,0 +1,46 @@
+{
+  "performance_summary": "The strategy returned 23.3%, underperforming Buy & Hold (25.3%) by 2.0%. The Sharpe ratio of 1.22 suggests moderate risk-adjusted performance.",
+  "outperformance_reasons": [],
+  "underperformance_reasons": [],
+  "key_news_events": [
+    {
+      "headline": "Market update day 51",
+      "date": "2025-11-21",
+      "sentiment_impact": "Positive"
+    },
+    {
+      "headline": "Market update day 59",
+      "date": "2025-12-04",
+      "sentiment_impact": "Positive"
+    },
+    {
+      "headline": "Market update day 66",
+      "date": "2025-12-15",
+      "sentiment_impact": "Positive"
+    }
+  ],
+  "sentiment_impact_analysis": "Neutral sentiment (avg: 0.09) suggests news had minimal directional impact. Technical signals likely drove most trades.",
+  "political_factors": [],
+  "parameter_sensitivity": {
+    "window_ratio": "Balanced window ratio for trend detection",
+    "news_weight": "Balanced technical-sentiment weighting"
+  },
+  "strategy_strengths": [
+    "Strong risk-adjusted returns (Sharpe > 1.0)",
+    "Consistent winning trades"
+  ],
+  "strategy_weaknesses": [
+    "Limited trade sample size reduces statistical significance"
+  ],
+  "suggestions": [
+    "Consider adjusting entry/exit thresholds to reduce false signals"
+  ],
+  "risk_warnings": [
+    "Limited trade history; results may not be statistically significant",
+    "Minimal alpha generation; consider passive alternative"
+  ],
+  "confidence_score": 0.6,
+  "model_used": "rule_based_heuristic",
+  "generated_at": "2026-09-11T18:12:10.997133",
+  "cache_key": "fba7119ba67e6445"
+}
