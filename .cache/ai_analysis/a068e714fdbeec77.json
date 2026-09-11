@@ -1,0 +1,29 @@
+{
+  "performance_summary": "The strategy achieved a 15.0% return, outperforming Buy & Hold (8.0%) by 7.0%. With a Sharpe ratio of 1.20 and maximum drawdown of -12.0%, the risk-adjusted returns were attractive.",
+  "outperformance_reasons": [
+    "High win rate (60%) indicates effective signal generation"
+  ],
+  "underperformance_reasons": [],
+  "key_news_events": [],
+  "sentiment_impact_analysis": "No news data available for analysis.",
+  "political_factors": [],
+  "parameter_sensitivity": {
+    "window_ratio": "Balanced window ratio for trend detection",
+    "news_weight": "Balanced technical-sentiment weighting"
+  },
+  "strategy_strengths": [
+    "Strong risk-adjusted returns (Sharpe > 1.0)",
+    "Consistent winning trades"
+  ],
+  "strategy_weaknesses": [
+    "Limited trade sample size reduces statistical significance"
+  ],
+  "suggestions": [],
+  "risk_warnings": [
+    "Limited trade history; results may not be statistically significant"
+  ],
+  "confidence_score": 0.4,
+  "model_used": "rule_based_heuristic",
+  "generated_at": "2026-09-11T18:13:06.934125",
+  "cache_key": "a068e714fdbeec77"
+}

@@ -1,0 +1,28 @@
+{
+  "performance_summary": "The strategy returned 5.0%, underperforming Buy & Hold (8.0%) by 3.0%. The Sharpe ratio of 0.50 suggests moderate risk-adjusted performance.",
+  "outperformance_reasons": [],
+  "underperformance_reasons": [
+    "Excessive drawdown eroded capital during adverse periods"
+  ],
+  "key_news_events": [],
+  "sentiment_impact_analysis": "No news data available for analysis.",
+  "political_factors": [],
+  "parameter_sensitivity": {},
+  "strategy_strengths": [],
+  "strategy_weaknesses": [
+    "Significant drawdown exposure",
+    "Limited trade sample size reduces statistical significance"
+  ],
+  "suggestions": [
+    "Consider adjusting entry/exit thresholds to reduce false signals",
+    "Implement stop-loss mechanisms to limit downside risk"
+  ],
+  "risk_warnings": [
+    "Historical drawdown exceeds typical risk tolerance (25%)",
+    "Limited trade history; results may not be statistically significant"
+  ],
+  "confidence_score": 0.1,
+  "model_used": "rule_based_heuristic",
+  "generated_at": "2026-09-11T18:13:06.938062",
+  "cache_key": "8a50f2c4e65e5cf9"
+}
