@@ -1,0 +1,46 @@
+{
+  "performance_summary": "The strategy returned 0.0%, underperforming Buy & Hold (25.4%) by 25.4%. The Sharpe ratio of 0.00 suggests poor risk-adjusted performance.",
+  "outperformance_reasons": [],
+  "underperformance_reasons": [
+    "Underperformed benchmark by 25.4%",
+    "Low win rate (0%) suggests signal quality issues"
+  ],
+  "key_news_events": [
+    {
+      "headline": "Market update day 50",
+      "date": "2025-11-20",
+      "sentiment_impact": "Positive"
+    },
+    {
+      "headline": "Market update day 53",
+      "date": "2025-11-25",
+      "sentiment_impact": "Positive"
+    },
+    {
+      "headline": "Market update day 56",
+      "date": "2025-12-01",
+      "sentiment_impact": "Positive"
+    }
+  ],
+  "sentiment_impact_analysis": "Neutral sentiment (avg: 0.08) suggests news had minimal directional impact. Technical signals likely drove most trades.",
+  "political_factors": [],
+  "parameter_sensitivity": {
+    "window_ratio": "Balanced window ratio for trend detection",
+    "news_weight": "Balanced technical-sentiment weighting"
+  },
+  "strategy_strengths": [],
+  "strategy_weaknesses": [
+    "Limited trade sample size reduces statistical significance",
+    "Marginal absolute returns may not justify active management"
+  ],
+  "suggestions": [
+    "Consider adjusting entry/exit thresholds to reduce false signals"
+  ],
+  "risk_warnings": [
+    "Limited trade history; results may not be statistically significant"
+  ],
+  "confidence_score": 0.30000000000000004,
+  "model_used": "rule_based_heuristic",
+  "generated_at": "2026-09-11T18:22:35.375759",
+  "cache_key": "44dae21bb0729cc8"
+}
