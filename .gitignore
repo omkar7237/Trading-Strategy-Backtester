@@ -1,6 +1,10 @@
-# Compiled and build artifacts
+node_modules/
+frontend/node_modules/
+.env
 __pycache__/
 *.pyc
-
-# Cache directories
+.pytest_cache/
 .cache/
+data/raw/
+dist/
+logs/
