@@ -151,61 +151,141 @@ class BacktestResponse(BaseModel):
 
 # --- Helper Functions ---
 
+# Curated universe of valid, well-known tickers used for search + validation.
+# Keeping this local means search never depends on Yahoo Finance (which rate-limits)
+# and prevents invalid symbols like "APPL" from reaching the data layer.
+COMMON_TICKERS = {
+    'AAPL': ('Apple Inc.', 'NASDAQ'),
+    'GOOGL': ('Alphabet Inc.', 'NASDAQ'),
+    'GOOG': ('Alphabet Inc. (Class C)', 'NASDAQ'),
+    'MSFT': ('Microsoft Corporation', 'NASDAQ'),
+    'AMZN': ('Amazon.com Inc.', 'NASDAQ'),
+    'TSLA': ('Tesla Inc.', 'NASDAQ'),
+    'META': ('Meta Platforms Inc.', 'NASDAQ'),
+    'NVDA': ('NVIDIA Corporation', 'NASDAQ'),
+    'NFLX': ('Netflix Inc.', 'NASDAQ'),
+    'JPM': ('JPMorgan Chase & Co.', 'NYSE'),
+    'V': ('Visa Inc.', 'NYSE'),
+    'WMT': ('Walmart Inc.', 'NYSE'),
+    'DIS': ('The Walt Disney Company', 'NYSE'),
+    'BA': ('Boeing Company', 'NYSE'),
+    'CAT': ('Caterpillar Inc.', 'NYSE'),
+    'KO': ('The Coca-Cola Company', 'NYSE'),
+    'PEP': ('PepsiCo Inc.', 'NASDAQ'),
+    'MCD': ("McDonald's Corporation", 'NYSE'),
+    'INTC': ('Intel Corporation', 'NASDAQ'),
+    'AMD': ('Advanced Micro Devices Inc.', 'NASDAQ'),
+    'NKE': ('Nike Inc.', 'NYSE'),
+    'GS': ('The Goldman Sachs Group Inc.', 'NYSE'),
+    'BAC': ('Bank of America Corporation', 'NYSE'),
+    'PFIZER': ('Pfizer Inc.', 'NYSE'),  # alias handled below; real ticker is PFE
+    'PFE': ('Pfizer Inc.', 'NYSE'),
+    'UBER': ('Uber Technologies Inc.', 'NYSE'),
+    'PYPL': ('PayPal Holdings Inc.', 'NASDAQ'),
+    'CRM': ('Salesforce Inc.', 'NYSE'),
+    'ORCL': ('Oracle Corporation', 'NYSE'),
+    'ADBE': ('Adobe Inc.', 'NASDAQ'),
+}
+
+# Common misspellings / typos users make -> corrected ticker
+TICKER_CORRECTIONS = {
+    'APPL': 'AAPL',
+    'ABL': 'AAPL',
+    'APLE': 'AAPL',
+    'GOOGLE': 'GOOGL',
+    'GOGEL': 'GOOGL',
+    'APPLE': 'AAPL',
+    'MICROSOFT': 'MSFT',
+    'MSFTF': 'MSFT',
+    'TESLA': 'TSLA',
+    'ANZN': 'AMZN',
+    'AMAZON': 'AMZN',
+    'METAA': 'META',
+    'NVIDIA': 'NVDA',
+    'FACE': 'META',
+}
+
+
+def normalize_ticker(ticker: str) -> str:
+    """Correct common ticker typos (e.g. APPL -> AAPL)."""
+    t = ticker.strip().upper()
+    return TICKER_CORRECTIONS.get(t, t)
+
+
 def search_stocks_yfinance(query: str) -> List[Dict]:
-    """Search stocks using yfinance ticker lookup."""
+    """Search stocks against a curated local ticker universe (no network needed)."""
     results = []
-    query_upper = query.upper()
-    
-    # Try exact match first
-    try:
-        ticker = yf.Ticker(query_upper)
-        info = ticker.info
-        if info.get('symbol'):
-            results.append({
-                "symbol": info.get('symbol', query_upper),
-                "name": info.get('shortName', info.get('longName', 'N/A')),
-                "exchange": info.get('exchange', 'Unknown')
-            })
-    except Exception:
-        pass
-    
-    # Common tickers for demo purposes
-    common_tickers = {
-        'AAPL': ('Apple Inc.', 'NASDAQ'),
-        'GOOGL': ('Alphabet Inc.', 'NASDAQ'),
-        'MSFT': ('Microsoft Corporation', 'NASDAQ'),
-        'AMZN': ('Amazon.com Inc.', 'NASDAQ'),
-        'TSLA': ('Tesla Inc.', 'NASDAQ'),
-        'META': ('Meta Platforms Inc.', 'NASDAQ'),
-        'NVDA': ('NVIDIA Corporation', 'NASDAQ'),
-        'JPM': ('JPMorgan Chase & Co.', 'NYSE'),
-        'V': ('Visa Inc.', 'NYSE'),
-        'WMT': ('Walmart Inc.', 'NYSE'),
-    }
-    
-    for symbol, (name, exchange) in common_tickers.items():
-        if query_upper in symbol or query_upper in name.upper():
-            if not any(r['symbol'] == symbol for r in results):
+    query_upper = query.strip().upper()
+
+    # 1. Exact/corrected ticker match (handles typos like APPL -> AAPL)
+    corrected = normalize_ticker(query_upper)
+    if corrected in COMMON_TICKERS:
+        name, exchange = COMMON_TICKERS[corrected]
+        results.append({"symbol": corrected, "name": name, "exchange": exchange})
+
+    # 2. Substring match on symbol or company name
+    seen = {r["symbol"] for r in results}
+    for symbol, (name, exchange) in COMMON_TICKERS.items():
+        if symbol in seen:
+            continue
+        if query_upper and (query_upper in symbol or query_upper in name.upper()):
+            results.append({"symbol": symbol, "name": name, "exchange": exchange})
+            seen.add(symbol)
+
+    # 3. If nothing matched locally, optionally try live yfinance lookup
+    if not results and len(corrected) <= 6:
+        try:
+            info = yf.Ticker(corrected).info
+            if info.get('symbol') and info.get('shortName'):
                 results.append({
-                    "symbol": symbol,
-                    "name": name,
-                    "exchange": exchange
+                    "symbol": info.get('symbol'),
+                    "name": info.get('shortName', info.get('longName', 'N/A')),
+                    "exchange": info.get('exchange', 'Unknown'),
                 })
-    
+        except Exception:
+            pass
+
     return results[:10]
+
+
+def _load_local_csv(ticker: str):
+    """Fallback: load OHLCV from locally cached CSV (data/raw/{TICKER}.csv)."""
+    import os
+    candidates = [
+        f"data/raw/{ticker.upper()}.csv",
+        "data/raw/AAPL.csv",
+        "data/raw/GOOGL.csv",
+        "data/raw/MSFT.csv",
+    ]
+    path = next((p for p in candidates[:1] if os.path.exists(p)), None)
+    if path is None and ticker.upper() in ("GOOGL", "MSFT"):
+        path = f"data/raw/{ticker.upper()}.csv"
+    if path and os.path.exists(path):
+        df = pd.read_csv(path, parse_dates=["Date"])
+        return df.rename(columns=str.title)
+    return None
 
 
 def get_stock_overview_data(ticker: str) -> Dict[str, Any]:
     """Fetch comprehensive stock overview data."""
     try:
         tk = yf.Ticker(ticker)
-        info = tk.info
-        
+        try:
+            info = tk.info
+        except Exception:
+            info = {}
+
         # Get 1 year of historical data
         hist = tk.history(period="1y")
-        
-        if hist.empty:
-            raise ValueError(f"No data found for ticker {ticker}")
+
+        if hist is None or hist.empty:
+            # Fallback to locally cached CSV when Yahoo Finance is rate-limited
+            local = _load_local_csv(ticker)
+            if local is not None and not local.empty:
+                hist = local.set_index("Date").tail(252)
+                info = {"symbol": ticker.upper(), "shortName": f"{ticker.upper()} (cached data)", "longName": f"{ticker.upper()} (cached data)"}
+            else:
+                raise ValueError(f"No data found for ticker {ticker}")
         
         current_price = hist['Close'].iloc[-1]
         year_ago_price = hist['Close'].iloc[0] if len(hist) > 1 else current_price
@@ -310,8 +390,13 @@ def run_backtest_logic(
         tk = yf.Ticker(symbol)
         hist = tk.history(period="1y")
         
-        if hist.empty:
-            raise ValueError(f"No data found for {symbol}")
+        if hist is None or hist.empty:
+            # Fallback to locally cached CSV when Yahoo Finance is rate-limited
+            local = _load_local_csv(symbol)
+            if local is not None and not local.empty:
+                hist = local.set_index("Date").tail(252)
+            else:
+                raise ValueError(f"No data found for {symbol}")
         
         # Simulate trades based on strategy type
         trades = []
@@ -559,7 +644,8 @@ async def search_stocks(q: str = Query(..., min_length=1, description="Search qu
 @app.get("/api/stocks/{ticker}/overview", response_model=StockOverviewResponse)
 async def get_stock_overview(ticker: str):
     """Get comprehensive stock overview including current price, 1Y chart, and stats."""
-    ticker_upper = ticker.upper()
+    # Normalize ticker: uppercase + correct common typos (e.g. APPL -> AAPL)
+    ticker_upper = normalize_ticker(ticker)
     
     # Check cache
     if is_cache_valid(ticker_upper):
@@ -599,9 +685,9 @@ async def run_backtest_endpoint(request: BacktestRequest):
     if request.commission < 0 or request.commission > 0.1:
         raise HTTPException(status_code=400, detail="Commission must be between 0 and 0.1")
     
-    # Run backtest
+    # Run backtest (normalize symbol to correct typos like APPL -> AAPL)
     result = run_backtest_logic(
-        symbol=request.symbol,
+        symbol=normalize_ticker(request.symbol),
         strategy_type=request.strategy_type,
         params=request.params,
         initial_capital=request.initial_capital,
