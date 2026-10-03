@@ -1,0 +1,45 @@
+{
+  "performance_summary": "The strategy returned 42.4%, underperforming Buy & Hold (45.3%) by 2.9%. The Sharpe ratio of 2.13 suggests moderate risk-adjusted performance.",
+  "outperformance_reasons": [],
+  "underperformance_reasons": [],
+  "key_news_events": [
+    {
+      "headline": "Market update day 53",
+      "date": "2024-03-19",
+      "sentiment_impact": "Positive"
+    },
+    {
+      "headline": "Market update day 54",
+      "date": "2024-03-20",
+      "sentiment_impact": "Positive"
+    },
+    {
+      "headline": "Market update day 57",
+      "date": "2024-03-25",
+      "sentiment_impact": "Positive"
+    }
+  ],
+  "sentiment_impact_analysis": "Neutral sentiment (avg: 0.07) suggests news had minimal directional impact. Technical signals likely drove most trades.",
+  "political_factors": [],
+  "parameter_sensitivity": {
+    "window_ratio": "Balanced window ratio for trend detection",
+    "news_weight": "Balanced technical-sentiment weighting"
+  },
+  "strategy_strengths": [
+    "Strong risk-adjusted returns (Sharpe > 1.0)",
+    "Consistent winning trades"
+  ],
+  "strategy_weaknesses": [
+    "Limited trade sample size reduces statistical significance"
+  ],
+  "suggestions": [
+    "Consider adjusting entry/exit thresholds to reduce false signals"
+  ],
+  "risk_warnings": [
+    "Limited trade history; results may not be statistically significant"
+  ],
+  "confidence_score": 0.6,
+  "model_used": "rule_based_heuristic",
+  "generated_at": "2026-10-01T18:11:39.552679",
+  "cache_key": "bc9fa2502333f352"
+}
