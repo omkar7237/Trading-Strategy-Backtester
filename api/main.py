@@ -135,6 +135,27 @@ class NewsSentimentSummary(BaseModel):
     dominant_theme: str
     impact_assessment: str
 
+class NewsEventDetail(BaseModel):
+    headline: str
+    date: str
+    sentiment_impact: str
+
+class AIAnalysisDetail(BaseModel):
+    """Mirrors ai.reasoning_engine.AIAnalysisResult.to_dict(). Keep the two in
+    sync — Pydantic will reject keys that are missing here."""
+    performance_summary: str
+    outperformance_reasons: List[str] = []
+    underperformance_reasons: List[str] = []
+    key_news_events: List[NewsEventDetail] = []
+    sentiment_impact_analysis: str = ""
+    political_factors: List[str] = []
+    parameter_sensitivity: Dict[str, Any] = {}
+    strategy_strengths: List[str] = []
+    strategy_weaknesses: List[str] = []
+    suggestions: List[str] = []
+    risk_warnings: List[str] = []
+    confidence_score: float
+
 class BacktestResponse(BaseModel):
     symbol: str
     strategy_type: str
@@ -147,6 +168,8 @@ class BacktestResponse(BaseModel):
     trades: List[TradeMetadata]
     news_sentiment_summary: Optional[NewsSentimentSummary] = None
     ai_reasoning_text: Optional[str] = None
+    # Must be declared or FastAPI's response_model filtering silently drops it.
+    ai_analysis: Optional[AIAnalysisDetail] = None
 
 
 # --- Helper Functions ---
@@ -588,12 +611,12 @@ def run_backtest_logic(
                 ]
                 
                 ai_result = ai_generate_analysis(
-                    metrics=metrics_for_ai,
-                    trades=[t.dict() if hasattr(t, 'dict') else t for t in trades],
-                    news_data=simulated_news,
-                    strategy_params={**params, "news_weight": news_weight},
-                    cache_enabled=True
-                )
+                                    metrics=metrics_for_ai,
+                                    trades=[t.model_dump() if hasattr(t, 'model_dump') else t for t in trades],
+                                    news_data=simulated_news,
+                                    strategy_params={**params, "news_weight": news_weight},
+                                    cache_enabled=True
+                                )
                 ai_analysis_result = ai_result.to_dict()
                 
                 # Use enhanced AI reasoning if available

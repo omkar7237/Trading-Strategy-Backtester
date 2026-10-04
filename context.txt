@@ -1,0 +1,1098 @@
+The goal for the new Trading Strategy Backtester will be:
+
+A complete quantitative trading application that downloads market data, calculates indicators, runs strategies, backtests them realistically, calculates performance metrics, compares against Buy & Hold, exposes everything through FastAPI, displays results in React, and finally adds an AI analysis layer.
+
+Final architecture
+Trading Strategy Backtester
+│
+├── data/
+│   ├── raw/
+│   ├── downloader.py
+│   ├── loader.py
+│   └── validator.py
+│
+├── indicators/
+│   └── technical indicators
+│
+├── strategy/
+│   ├── basic_strategy.py
+│   └── ...
+│
+├── backtest/
+│   └── engine.py
+│
+├── performance/
+│   └── metrics.py
+│
+├── tests/
+│
+├── notebooks/
+│
+├── api/
+│   └── main.py
+│
+├── frontend/
+│   └── React + Vite
+│
+└── README.md
+
+We'll build it in 40 days, roughly 1 hour/day.
+
+🟢 PHASE 1 — Data Foundation
+Days 1–5
+Day 1 — Project Setup + Market Data
+Learn
+What a backtester does
+OHLCV data
+Historical stock data
+Adjusted vs unadjusted prices
+CSV
+Build
+
+Create:
+
+Trading-Strategy-Backtester/
+│
+├── data/
+│   └── raw/
+│
+├── notebooks/
+│
+├── tests/
+│
+├── strategy/
+│
+├── backtest/
+│
+└── performance/
+
+Install:
+
+pandas
+numpy
+yfinance
+matplotlib
+plotly
+pytest
+
+Download:
+
+AAPL
+GOOGL
+MSFT
+
+Save them into:
+
+data/raw/
+Goal
+
+You should be able to run:
+
+python notebooks/day1_data_exploration.py
+
+and inspect the data.
+
+Day 2 — Data Pipeline
+
+Build:
+
+data/downloader.py
+data/loader.py
+data/validator.py
+Downloader
+
+Responsible for:
+
+Yahoo Finance
+      ↓
+CSV
+Loader
+
+Responsible for:
+
+CSV
+ ↓
+Pandas DataFrame
+Validator
+
+Check:
+
+required columns
+missing values
+duplicate dates
+date ordering
+empty datasets
+numeric OHLCV values
+Important
+
+Make the validator robust against Yahoo Finance's weird headers/MultiIndex.
+
+Day 3 — Technical Indicators I
+
+Build:
+
+SMA
+EMA
+
+Understand:
+
+SMA
+SMA = average of previous N prices
+EMA
+
+Gives greater weight to recent prices.
+
+Implement:
+
+sma(data, window)
+ema(data, window)
+
+Test them.
+
+Day 4 — Technical Indicators II
+
+Build:
+
+RSI
+
+Understand:
+
+gains
+losses
+average gain
+average loss
+RS
+RSI
+overbought
+oversold
+
+Implement:
+
+rsi(data)
+
+Test RSI.
+
+Day 5 — Technical Indicators III
+
+Build:
+
+MACD
+Bollinger Bands
+
+MACD:
+
+MACD
+Signal
+Histogram
+
+Bollinger:
+
+Middle Band
+Upper Band
+Lower Band
+
+At the end of Day 5:
+
+Price
+SMA
+EMA
+RSI
+MACD
+Bollinger Bands
+
+should all exist in your DataFrame.
+
+🟡 PHASE 2 — Strategy Engine
+Days 6–10
+Day 6 — First Trading Strategy
+
+Create:
+
+strategy/basic_strategy.py
+
+Start with:
+
+Moving Average Crossover
+SMA20 > SMA50
+        ↓
+      BUY
+
+and:
+
+SMA20 < SMA50
+        ↓
+      SELL
+
+Create:
+
+generate_signals(data)
+
+Output:
+
+1  = BUY
+0  = HOLD
+-1 = SELL
+Day 7 — Combining Indicators
+
+Improve the strategy.
+
+Example:
+
+SMA20 > SMA50
+AND
+RSI > 50
+        ↓
+      BUY
+
+Sell:
+
+SMA20 < SMA50
+AND
+RSI < 50
+        ↓
+      SELL
+
+Learn why combining indicators can reduce bad signals.
+
+Day 8 — Backtest Engine
+
+Create:
+
+backtest/engine.py
+
+Create:
+
+BacktestEngine
+
+It should manage:
+
+cash
+position
+entry price
+trades
+portfolio value
+
+Implement:
+
+buy()
+sell()
+portfolio_value()
+get_trades()
+Day 9 — Execute the Strategy
+
+Connect:
+
+Data
+ ↓
+Indicators
+ ↓
+Signals
+ ↓
+BacktestEngine
+
+Your program should now actually simulate:
+
+BUY
+SELL
+BUY
+SELL
+...
+
+using historical prices.
+
+Day 10 — First Realistic Backtest
+
+Fix the first major problem you encountered in the old project:
+
+Look-ahead bias.
+
+Don't do:
+
+Signal today
+→ Buy today
+
+Instead:
+
+Signal today
+     ↓
+Buy next day's Open
+
+This is much closer to how a real backtest should operate.
+
+🟠 PHASE 3 — Realistic Trading
+Days 11–15
+Day 11 — Position Sizing
+
+Add:
+
+position_size
+
+For example:
+
+position_size = 0.5
+
+means:
+
+Use 50% of available capital for a position.
+
+Example:
+
+Capital = $10,000
+
+50% = $5,000
+
+Stock = $100
+
+Shares = 50
+Day 12 — Commission
+
+Add transaction costs.
+
+Example:
+
+Commission = 0.1%
+
+Buy:
+
+Trade value × commission
+
+Sell:
+
+Trade value × commission
+
+Make sure the cost actually affects cash.
+
+Day 13 — Slippage
+
+Add:
+
+slippage
+
+Example:
+
+Expected price = $100
+Slippage = 0.1%
+
+Actual buy price:
+
+$100.10
+
+Actual sell price:
+
+$99.90
+
+Now your backtester becomes more realistic.
+
+Day 14 — Stop Loss
+
+Add:
+
+stop_loss
+
+Example:
+
+Entry = $100
+
+Stop loss = 5%
+
+Therefore:
+
+Stop = $95
+
+If price reaches the stop:
+
+EXIT
+Day 15 — Take Profit
+
+Add:
+
+take_profit
+
+Example:
+
+Entry = $100
+
+Take profit = 10%
+
+Target:
+
+$110
+
+Strategy:
+
+Entry
+ ↓
+ ├── $95 → Stop Loss
+ │
+ └── $110 → Take Profit
+🔵 PHASE 4 — Performance Analysis
+Days 16–20
+Day 16 — Portfolio Tracking
+
+Instead of only recording trades, record portfolio value every day.
+
+Create:
+
+portfolio
+
+Example:
+
+Date          Portfolio
+2020-01-01    10000
+2020-01-02    10050
+2020-01-03    10020
+...
+
+This becomes the foundation for performance analysis.
+
+Day 17 — Basic Performance Metrics
+
+Create:
+
+performance/metrics.py
+
+Implement:
+
+total_return()
+CAGR
+
+Example:
+
+Initial = $10,000
+Final = $12,000
+
+Return = 20%
+Day 18 — Drawdown
+
+Implement:
+
+maximum_drawdown()
+
+Understand:
+
+Peak
+ ↓
+Portfolio falls
+ ↓
+Trough
+
+Example:
+
+Peak = $15,000
+Trough = $12,000
+
+Drawdown = -20%
+Day 19 — Sharpe Ratio
+
+Implement:
+
+sharpe_ratio()
+
+Understand:
+
+Return
+   ↓
+Risk-adjusted return
+
+Interpretation:
+
+Higher Sharpe
+      ↓
+Better return relative to volatility
+
+Don't blindly optimize for Sharpe — understand what it measures.
+
+Day 20 — Trade Statistics
+
+Calculate:
+
+Total Trades
+Winning Trades
+Losing Trades
+Win Rate
+Average Win
+Average Loss
+Profit Factor
+
+Example:
+
+Total trades: 20
+Wins: 12
+Losses: 8
+Win rate: 60%
+🟣 PHASE 5 — Benchmarking + Research
+Days 21–25
+Day 21 — Buy & Hold
+
+Create a benchmark.
+
+Strategy:
+
+BUY → SELL → BUY → SELL
+
+Buy & Hold:
+
+BUY
+ ↓
+HOLD
+ ↓
+HOLD
+ ↓
+SELL at end
+
+Calculate:
+
+Buy & Hold Value
+Buy & Hold Return
+Day 22 — Strategy vs Buy & Hold
+
+Create a comparison:
+
+Metric	Strategy	Buy & Hold
+Final Value	$12,000	$20,000
+Return	20%	100%
+Drawdown	-10%	-30%
+
+This is extremely important.
+
+A strategy isn't automatically good because it makes money.
+
+Day 23 — Parameter Testing
+
+Test:
+
+SMA20 / SMA50
+SMA10 / SMA30
+SMA20 / SMA100
+SMA50 / SMA200
+
+Store:
+
+parameters
+final value
+return
+Sharpe
+drawdown
+
+Create a results DataFrame.
+
+Day 24 — Strategy Comparison
+
+Create multiple strategies:
+
+Strategy 1
+
+Moving Average Crossover
+
+Strategy 2
+
+RSI
+
+Strategy 3
+
+MA + RSI
+
+Compare their performance.
+
+Day 25 — Visualization
+
+Create charts:
+
+Portfolio curve
+Portfolio value
+      ↑
+      │       /
+      │    __/
+      │___/
+      └────────→ Time
+Price + SMA
+Drawdown
+Buy/Sell markers
+
+Use:
+
+Plotly
+
+This is where the project starts looking like an actual financial application.
+
+🔴 PHASE 6 — Testing + Software Engineering
+Days 26–30
+Day 26 — Unit Testing
+
+Create tests for:
+
+data
+indicators
+strategy
+engine
+metrics
+
+Run:
+
+python -m pytest
+
+Target:
+
+All tests passed
+Day 27 — Fix Edge Cases
+
+Test:
+
+Empty data
+Missing values
+Only one price
+No trades
+Only BUY
+Only SELL
+Multiple BUY signals
+Multiple SELL signals
+Insufficient capital
+
+This is important because a finance application should fail predictably.
+
+Day 28 — Refactor the Project
+
+Clean up the architecture.
+
+Avoid putting everything into one notebook.
+
+Your flow should be:
+
+notebook
+   ↓
+data
+   ↓
+strategy
+   ↓
+backtest
+   ↓
+performance
+
+The notebook should use your modules, not contain the entire application.
+
+Day 29 — FastAPI Backend
+
+Create:
+
+api/main.py
+
+Create:
+
+POST /backtest
+
+Request:
+
+{
+  "symbol": "AAPL",
+  "initial_capital": 10000,
+  "commission": 0.001,
+  "slippage": 0,
+  "position_size": 0.5,
+  "short_window": 20,
+  "long_window": 50
+}
+Day 30 — API Performance Response
+
+Return:
+
+{
+  "strategy_final_value": 12006,
+  "strategy_return": 20.07,
+  "cagr": 3.8,
+  "buy_hold_value": 34826,
+  "buy_hold_return": 248.27,
+  "sharpe_ratio": 0.62,
+  "maximum_drawdown": -11.01,
+  "total_trades": 20,
+  "winning_trades": 12,
+  "losing_trades": 8,
+  "win_rate": 60,
+  "profit_factor": 1.7
+}
+
+Test it through:
+
+http://127.0.0.1:8000/docs
+🟢 PHASE 7 — React Dashboard
+Days 31–34
+Day 31 — React Setup
+
+Create:
+
+frontend/
+
+Use:
+
+React
+Vite
+
+Build the basic UI:
+
+Trading Strategy Backtester
+
+Symbol
+[ AAPL ]
+
+Initial Capital
+[ 10000 ]
+
+Short Window
+[ 20 ]
+
+Long Window
+[ 50 ]
+
+[ Run Backtest ]
+Day 32 — Connect React → FastAPI
+
+React sends:
+
+POST /backtest
+
+FastAPI returns:
+
+JSON
+
+React displays:
+
+Strategy Return
+CAGR
+Sharpe
+Drawdown
+Day 33 — Build the Dashboard
+
+Create cards:
+
+┌──────────────┐
+│ Final Value  │
+│ $12,006      │
+└──────────────┘
+
+┌──────────────┐
+│ Return       │
+│ 20.07%       │
+└──────────────┘
+
+┌──────────────┐
+│ Sharpe       │
+│ 0.62         │
+└──────────────┘
+
+Add:
+
+Strategy vs Buy & Hold
+Day 34 — Interactive Charts
+
+React dashboard should show:
+
+Portfolio Value
+Price
+Moving Averages
+Drawdown
+Buy/Sell markers
+
+Use a charting library.
+
+Now you have a genuine web application.
+
+🟡 PHASE 8 — Advanced Backtesting
+Days 35–37
+
+This is where we go beyond the original 30-day project.
+
+Day 35 — Multiple Stocks
+
+Allow:
+
+AAPL
+GOOGL
+MSFT
+TSLA
+NVDA
+
+from the frontend.
+
+User chooses:
+
+Symbol
+[AAPL ▼]
+
+and runs the backtest.
+
+Day 36 — Walk-Forward / Out-of-Sample Testing
+
+This is very important for a finance internship project.
+
+Instead of:
+
+2020 ───────────────── 2025
+        Test everything
+
+use:
+
+Training       Testing
+2020-2023      2024
+
+Then:
+
+Training       Testing
+2021-2024      2025
+
+This helps detect strategies that only work on historical data they were effectively optimized for.
+
+Day 37 — Monte Carlo / Robustness Testing
+
+Take your trades and simulate variations.
+
+For example:
+
+Original trades
+      ↓
+Randomized trade order
+      ↓
+1000 simulations
+      ↓
+Possible portfolio outcomes
+
+Analyze:
+
+Median return
+Worst case
+Best case
+Probability of loss
+Maximum drawdown distribution
+
+This makes the project significantly more quantitative.
+
+🔥 PHASE 9 — AI Agent
+Days 38–40
+
+This is where your earlier idea of adding an AI agent becomes useful.
+
+The AI should not decide what stock you should buy.
+
+Instead, it should analyze the output of your backtester.
+
+Day 38 — AI Analysis Layer
+
+Create something like:
+
+ai/
+    analyzer.py
+
+Input:
+
+{
+  "strategy_return": 20.07,
+  "cagr": 3.8,
+  "sharpe": 0.62,
+  "maximum_drawdown": -11.01,
+  "win_rate": 60,
+  "profit_factor": 1.7
+}
+
+AI receives the metrics.
+
+It can explain:
+
+The strategy generated a positive return,
+but underperformed Buy & Hold.
+
+The Sharpe ratio indicates moderate
+risk-adjusted performance.
+
+The maximum drawdown was relatively
+contained at -11%.
+Day 39 — AI Strategy Report
+
+Create an AI-generated report:
+
+┌───────────────────────────────┐
+│       AI PERFORMANCE REPORT   │
+├───────────────────────────────┤
+│                               │
+│ Overall Assessment             │
+│ Moderate                       │
+│                               │
+│ Strengths                      │
+│ • Controlled drawdown         │
+│ • Positive return             │
+│                               │
+│ Weaknesses                     │
+│ • Underperformed benchmark    │
+│ • Low Sharpe                  │
+│                               │
+│ Suggestions                   │
+│ • Test different parameters   │
+│ • Perform out-of-sample test  │
+│                               │
+└───────────────────────────────┘
+
+The important point:
+
+AI analyzes the backtest.
+
+It doesn't secretly alter your results.
+
+Day 40 — Final Product + Portfolio Polish
+
+Finish the project.
+
+Dashboard
+Trading Strategy Backtester
+────────────────────────────────────
+
+Stock
+[AAPL ▼]
+
+Capital
+[$10,000]
+
+Strategy
+[MA + RSI ▼]
+
+Short Window
+[20]
+
+Long Window
+[50]
+
+Commission
+[0.1%]
+
+Slippage
+[0%]
+
+             [ RUN BACKTEST ]
+
+
+PERFORMANCE
+
+Strategy          Buy & Hold
+$12,006            $34,826
+
+20.07%             248.27%
+
+CAGR               CAGR
+3.8%               ...
+
+Sharpe             Drawdown
+0.62               -11.01%
+
+
+        PERFORMANCE CHART
+
+              📈
+
+
+        AI ANALYSIS
+
+"The strategy generated positive
+returns but significantly
+underperformed Buy & Hold..."
+Final 40-Day Roadmap
+
+Here's the whole thing at a glance:
+
+Day	Topic	Main Output
+1	Setup + Data	Market data
+2	Data Pipeline	Loader/Validator
+3	SMA + EMA	Indicators
+4	RSI	RSI
+5	MACD + Bollinger	Indicators
+6	First Strategy	Signals
+7	Combined Strategy	MA + RSI
+8	Backtest Engine	Buy/Sell
+9	Strategy Execution	Full backtest
+10	Look-ahead Bias	Realistic execution
+11	Position Sizing	Risk allocation
+12	Commission	Trading costs
+13	Slippage	Execution costs
+14	Stop Loss	Risk control
+15	Take Profit	Exit control
+16	Portfolio Tracking	Equity curve
+17	Return + CAGR	Metrics
+18	Drawdown	Risk metric
+19	Sharpe	Risk-adjusted return
+20	Trade Statistics	Win rate etc.
+21	Buy & Hold	Benchmark
+22	Strategy Comparison	Benchmark analysis
+23	Parameter Testing	Optimization
+24	Multiple Strategies	Strategy comparison
+25	Visualization	Charts
+26	Unit Testing	Tests
+27	Edge Cases	Robustness
+28	Refactoring	Clean architecture
+29	FastAPI	Backend
+30	API Metrics	JSON API
+31	React	Frontend
+32	React + API	Full-stack connection
+33	Dashboard	Performance UI
+34	Charts	Interactive dashboard
+35	Multiple Stocks	Multi-symbol
+36	Walk Forward	Out-of-sample testing
+37	Monte Carlo	Robustness analysis
+38	AI Analyzer	AI metrics analysis
+39	AI Report	Automated report
+40	Final Polish	Portfolio project
+What you'll have at the end
+
+The final project will look like:
+
+                    USER
+                     │
+                     ▼
+             ┌───────────────┐
+             │ React         │
+             │ Dashboard     │
+             └───────┬───────┘
+                     │
+                     ▼
+             ┌───────────────┐
+             │ FastAPI       │
+             │ Backend       │
+             └───────┬───────┘
+                     │
+          ┌──────────┼───────────┐
+          ▼          ▼           ▼
+       DATA       STRATEGY    BACKTEST
+          │          │           │
+          └──────────┼───────────┘
+                     ▼
+              PERFORMANCE
+                 METRICS
+                     │
+          ┌──────────┴──────────┐
+          ▼                     ▼
+     Benchmark              Risk Analysis
+     Buy & Hold             Sharpe/DD
+          │                     │
+          └──────────┬──────────┘
+                     ▼
+                AI ANALYZER
+                     │
+                     ▼
+              FINAL REPORT
+And the GitHub history will be much cleaner
+
+Instead of one giant final commit, I'd recommend roughly:
+
+day-01-project-setup
+day-02-data-pipeline
+day-03-moving-averages
+day-04-rsi
+...
+day-10-realistic-execution
+...
+day-20-performance-metrics
+...
+day-30-fastapi-backend
+...
+day-34-react-dashboard
+...
+day-37-monte-carlo
+day-38-ai-analysis
+day-39-ai-report
+day-40-final-project
+
+That gives you 40 visible stages of development when an interviewer looks at the repository.

@@ -35,10 +35,8 @@ trading-backtester/
 │   ├── loader.py            # Data loading utilities
 │   └── news_processor.py    # Sentiment analysis
 ├── strategy/                # Strategy Implementations
-│   ├── base_strategy.py     # Abstract base class
-│   ├── basic_strategies.py  # MA, RSI, Combined strategies
-│   └── news_enhanced_strategy.py  # News-aware strategy
-├── tests/                   # Test Suite (63+ tests)
+│   └── basic_strategy.py    # MA, RSI, MACD, Combined strategy classes
+├── tests/                   # Test Suite (60 tests)
 ├── notebooks/               # Jupyter examples
 └── docs/                    # Documentation
 ```
@@ -102,7 +100,7 @@ Access at http://localhost:5173
 pytest tests/ -v
 ```
 
-All 63 tests should pass.
+All 60 tests should pass.
 
 ## 📊 API Endpoints
 
@@ -195,10 +193,20 @@ print(result.to_dict())
 | Strategy | Parameters | Description |
 |----------|-----------|-------------|
 | `simple_ma` | short_window, long_window | Basic MA crossover |
-| `news_enhanced_ma` | short_window, long_window, news_weight, sentiment_threshold | MA + sentiment filtering |
-| `rsi` | rsi_period, oversold, overbought | RSI mean reversion |
+| `news_enhanced_ma` | short_window, long_window, news_weight | MA + sentiment filtering |
+| `rsi` | rsi_period, oversold_threshold, overbought_threshold | RSI mean reversion |
 | `macd` | fast_period, slow_period, signal_period | MACD momentum |
-| `combined` | ma_short, ma_long, rsi_period | MA + RSI combination |
+
+These four are the strategies the API accepts (`GET /api/strategies` is the
+source of truth). The `RSIStrategy`, `MACDStrategy` and `CombinedStrategy`
+classes in `strategy/basic_strategy.py` are not yet wired into the
+`/api/backtest` engine, which currently evaluates MA crossovers for every
+strategy id — so `combined` is deliberately not registered.
+
+> **Known gap:** `run_backtest_logic` in `api/main.py` computes MA crossover
+> signals regardless of `strategy_type`, so `rsi` and `macd` currently produce
+> MA-crossover results with an RSI/MACD label. Wiring the strategy classes in
+> is the outstanding work.
 
 ## 🧪 Testing
 

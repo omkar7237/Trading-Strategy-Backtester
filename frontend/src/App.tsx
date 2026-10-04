@@ -1,8 +1,8 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StockOverviewPage, BacktestDashboard } from './pages';
-import { StockSearchBar } from './components';
+import { AppHeader, RecentStocksPanel } from './components';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -16,14 +16,7 @@ const queryClient = new QueryClient({
 const HomePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <h1 className="text-xl font-bold text-gray-900">Trading Strategy Backtester</h1>
-            <StockSearchBar />
-          </div>
-        </div>
-      </header>
+      <AppHeader />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center mb-12">
@@ -35,6 +28,11 @@ const HomePage: React.FC = () => {
             and political context. Get actionable insights backed by data.
           </p>
         </div>
+
+        {/* Recently / frequently opened stocks */}
+        <section className="mb-16">
+          <RecentStocksPanel />
+        </section>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
@@ -78,9 +76,9 @@ const HomePage: React.FC = () => {
           <p className="text-gray-600 mb-4">Ready to get started?</p>
           <p className="text-gray-500">
             Search for a stock above or navigate to{' '}
-            <a href="/backtest" className="text-primary-600 hover:text-primary-500 font-medium">
+            <Link to="/backtest" className="text-primary-600 hover:text-primary-500 font-medium">
               Backtest Dashboard
-            </a>
+            </Link>
           </p>
         </div>
       </main>

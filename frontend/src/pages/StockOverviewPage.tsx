@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { TrendingUp, DollarSign, BarChart3, Activity } from 'lucide-react';
 import { getStockOverview } from '../api';
-import { PriceChart, MetricsCard, StockSearchBar } from '../components';
+import { AppHeader, PriceChart, MetricsCard } from '../components';
+import { recordStockView } from '../lib/recentStocks';
 
 export const StockOverviewPage: React.FC = () => {
   const { ticker } = useParams<{ ticker: string }>();
@@ -15,6 +16,14 @@ export const StockOverviewPage: React.FC = () => {
     enabled: !!ticker,
     staleTime: 5 * 60 * 1000,
   });
+
+  // Record the visit once real data is in, so the recents list gets the
+  // company name from the API rather than echoing back the bare ticker.
+  useEffect(() => {
+    if (data?.symbol && data?.name) {
+      recordStockView(data.symbol, data.name);
+    }
+  }, [data?.symbol, data?.name]);
 
   if (isLoading) {
     return (
@@ -52,17 +61,9 @@ export const StockOverviewPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <h1 className="text-xl font-bold text-gray-900">Trading Strategy Backtester</h1>
-            <StockSearchBar />
-          </div>
-        </div>
-      </header>
+          <AppHeader />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stock Title */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-2">
@@ -70,36 +71,36 @@ export const StockOverviewPage: React.FC = () => {
             <span className="text-lg text-gray-600">{data.name}</span>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-4xl font-bold text-gray-900">${data.current_price.toFixed(2)}</span>
-            <span className={`text-lg font-medium ${data.stats.price_change_1d >= 0 ? 'text-success' : 'text-danger'}`}>
-              {data.stats.price_change_1d >= 0 ? '+' : ''}{data.stats.price_change_1d.toFixed(2)} ({data.stats.price_change_1d_percent.toFixed(2)}%)
-            </span>
-          </div>
+                      <span className="text-4xl font-bold text-gray-900">${data.current_price.toFixed(2)}</span>
+                      <span className={`text-lg font-medium ${data.stats.day_change_percent >= 0 ? 'text-success' : 'text-danger'}`}>
+                        {data.stats.day_change_percent >= 0 ? '+' : ''}{data.stats.day_change_percent.toFixed(2)}%
+                      </span>
+                    </div>
         </div>
 
         {/* Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <MetricsCard
-            title="Buy & Hold Return"
-            value={`${(data.buy_hold_return * 100).toFixed(2)}%`}
-            change={data.buy_hold_return * 100}
-            icon={<TrendingUp className="h-5 w-5" />}
-          />
-          <MetricsCard
-            title="Current Price"
-            value={`$${data.current_price.toFixed(2)}`}
-            icon={<DollarSign className="h-5 w-5" />}
-          />
-          <MetricsCard
-            title="P/E Ratio"
-            value={data.stats.pe_ratio?.toFixed(2) || 'N/A'}
-            icon={<BarChart3 className="h-5 w-5" />}
-          />
-          <MetricsCard
-            title="Avg Volume"
-            value={data.stats.avg_volume ? `${(data.stats.avg_volume / 1e6).toFixed(2)}M` : 'N/A'}
-            icon={<Activity className="h-5 w-5" />}
-          />
+                      title="Buy & Hold Return (1Y)"
+                      value={`${data.buy_hold_return_1y.toFixed(2)}%`}
+                      change={data.buy_hold_return_1y}
+                      icon={<TrendingUp className="h-5 w-5" />}
+                    />
+                    <MetricsCard
+                      title="Current Price"
+                      value={`$${data.current_price.toFixed(2)}`}
+                      icon={<DollarSign className="h-5 w-5" />}
+                    />
+                    <MetricsCard
+                      title="P/E Ratio"
+                      value={data.stats.pe_ratio?.toFixed(2) || 'N/A'}
+                      icon={<BarChart3 className="h-5 w-5" />}
+                    />
+                    <MetricsCard
+                      title="52-Week Range"
+                      value={`$${data.stats.year_low.toFixed(2)} - $${data.stats.year_high.toFixed(2)}`}
+                      icon={<Activity className="h-5 w-5" />}
+                    />
         </div>
 
         {/* Price Chart */}
